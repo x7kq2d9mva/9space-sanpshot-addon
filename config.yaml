@@ -1,0 +1,34 @@
+name: 9Space Snapshot Addon
+version: "0.1.0"
+slug: 9space_snapshot_api
+description: Single API returns stream health + snapshot (1080p JPEG) from Dahua NVR RTSP.
+arch:
+  - amd64
+  - aarch64
+  - armv7
+startup: services
+boot: auto
+init: false
+
+ports:
+  8000/tcp: 8000
+
+options:
+  nvr_host: "192.168.1.200"
+  rtsp_port: 554
+  username: "admin"
+  password: "password"
+  subtype: 0
+  health_timeout_ms: 2500
+  jpeg_qv: 7
+  max_concurrency: 2
+
+schema:
+  nvr_host: str
+  rtsp_port: int
+  username: str
+  password: password
+  subtype: int
+  health_timeout_ms: int
+  jpeg_qv: int
+  max_concurrency: int
