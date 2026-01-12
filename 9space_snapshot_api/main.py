@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import time
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple
@@ -55,76 +56,79 @@ def _build_rtsp_url(opts: dict, camera_id: str) -> str:
 async def _ffmpeg_grab_jpeg(
     rtsp_url: str, timeout_ms: int, jpeg_qv: int
 ) -> Tuple[bool, int, Optional[bytes], str]:
-    """
-    ok means: decoded >=1 frame and produced JPEG bytes.
-    Returns: (ok, latency_ms, jpeg_bytes_or_none, detail)
-    """
-    # ffmpeg -stimeout is microseconds (commonly used for RTSP connect/read timeout)
-    timeout_us = max(1, timeout_ms) * 1000
+    timeout_sec = max(1, int((max(1, timeout_ms) + 999) / 1000))  # ceil(ms/1000)
 
-    # 1080p output, keep aspect ratio, pad to 1920x1080 (no stretching)
-    vf = "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2"
+    vf = "scale=-2:640"
+
+    out_path = f"/tmp/snap_{int(time.time()*1000)}.jpg"
 
     cmd = [
+        "timeout", f"{timeout_sec}s",
         "ffmpeg",
         "-hide_banner",
-        "-loglevel",
-        "error",
-        "-rtsp_transport",
-        "tcp",
-        "-stimeout",
-        str(timeout_us),
-        "-i",
-        rtsp_url,
-        "-an",
-        "-frames:v",
-        "1",
-        "-vf",
-        vf,
-        "-q:v",
-        str(jpeg_qv),
-        "-f",
-        "image2pipe",
-        "-vcodec",
-        "mjpeg",
-        "pipe:1",
+        "-loglevel", "error",
+        "-rtsp_transport", "tcp",
+        "-i", rtsp_url,
+        "-an", "-sn", "-dn",
+        "-frames:v", "1",
+        "-vf", vf,
+        "-q:v", str(jpeg_qv),
+        "-y", out_path,
     ]
 
     t0 = time.perf_counter()
     try:
         proc = await asyncio.create_subprocess_exec(
             *cmd,
-            stdout=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.PIPE,
         )
 
-        # Give ffmpeg a small extra margin beyond the RTSP timeout.
         try:
-            stdout, stderr = await asyncio.wait_for(
-                proc.communicate(), timeout=timeout_ms / 1000.0 + 1.0
-            )
+            _, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout_sec + 2.0)
         except asyncio.TimeoutError:
             proc.kill()
             await proc.communicate()
             latency = int((time.perf_counter() - t0) * 1000)
-            return False, latency, None, "timeout"
+            return False, latency, None, "timeout(wait_for)"
 
         latency = int((time.perf_counter() - t0) * 1000)
 
-        if proc.returncode == 0 and stdout:
-            return True, latency, stdout, "decoded 1 frame"
+        if proc.returncode == 124:
+            return False, latency, None, "timeout"
+
+        if proc.returncode == 0:
+            try:
+                with open(out_path, "rb") as f:
+                    jpeg = f.read()
+                return True, latency, jpeg, "decoded 1 frame"
+            except Exception:
+                return False, latency, None, "read_tmp_failed"
+            finally:
+                try:
+                    os.remove(out_path)
+                except Exception:
+                    pass
 
         err = (stderr or b"").decode("utf-8", errors="ignore").strip()
         if err:
-            # Keep it short and stable for clients
             err = err.splitlines()[-1][:200]
         else:
             err = f"ffmpeg exit code {proc.returncode}"
+        # cleanup
+        try:
+            os.remove(out_path)
+        except Exception:
+            pass
         return False, latency, None, err
 
-    except Exception as e:
+    except Exception:
         latency = int((time.perf_counter() - t0) * 1000)
-        return False, latency, None, f"exception: {type(e).__name__}"
+        try:
+            os.remove(out_path)
+        except Exception:
+            pass
+        return False, latency, None, "exception"
 
 
 @app.on_event("startup")
