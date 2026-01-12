@@ -64,3 +64,12 @@ Then request a snapshot:
 ```sh
 curl -v http://localhost:8000/api/camera/1
 ```
+
+## Test script (PowerShell)
+
+Use the PowerShell helper to fetch a response and extract the JPEG payload:
+
+```powershell
+cd test
+.\test_api.ps1 192.168.1.10
+```
