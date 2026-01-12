@@ -50,15 +50,6 @@ The addon reads options from `/data/options.json`. Typical values are defined in
 - `jpeg_qv`: JPEG quality value (lower = higher quality).
 - `max_concurrency`: maximum concurrent ffmpeg processes.
 
-## Running locally
-
-Build the container and run it on port 8000:
-
-```sh
-docker build -t 9space-snapshot-api .
-docker run --rm -p 8000:8000 9space-snapshot-api
-```
-
 Then request a snapshot:
 
 ```sh
