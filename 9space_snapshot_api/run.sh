@@ -1,4 +1,4 @@
 #!/usr/bin/with-contenv sh
 set -e
 
-exec uvicorn app:app --host 0.0.0.0 --port 8000
+exec uvicorn main:app --app-dir /app --host 0.0.0.0 --port 8000
