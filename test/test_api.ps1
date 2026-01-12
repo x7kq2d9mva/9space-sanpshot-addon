@@ -1,5 +1,5 @@
 param(
-    # Example: .\test_9space_api.ps1 192.168.1.10
+    # Example: .\test_api.ps1 192.168.1.10
     [Parameter(Mandatory=$true, Position=0)]
     [string]$Ip
 )
