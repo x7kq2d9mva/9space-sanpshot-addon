@@ -11,7 +11,7 @@ fi
 HOST="$1"
 CAMERA_ID="$2"
 
-PORT=8000
+PORT=8122
 BASE_URL="http://${HOST}:${PORT}"
 URL="${BASE_URL%/}/api/camera/${CAMERA_ID}"
 
