@@ -1,4 +1,4 @@
-FROM FROM ghcr.io/home-assistant/base:latest
+FROM ghcr.io/home-assistant/base:latest
 
 RUN apk add --no-cache ffmpeg python3 py3-pip
 
