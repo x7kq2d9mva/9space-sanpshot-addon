@@ -1,5 +1,5 @@
 name: 9Space Snapshot Addon
-version: "0.1.0"
+version: "0.1.1"
 slug: 9space_snapshot_addon
 description: Single API returns stream health + snapshot (JPEG) from Dahua NVR RTSP.
 arch:
