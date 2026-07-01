@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import time
+import uuid
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple
 
@@ -60,7 +61,7 @@ async def _ffmpeg_grab_jpeg(
 
     vf = "scale=-2:640"
 
-    out_path = f"/tmp/snap_{int(time.time()*1000)}.jpg"
+    out_path = f"/tmp/snap_{os.getpid()}_{uuid.uuid4().hex}.jpg"
 
     cmd = [
         "timeout", f"{timeout_sec}s",
