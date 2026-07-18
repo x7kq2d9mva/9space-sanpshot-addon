@@ -3,7 +3,8 @@ param(
     [Parameter(Mandatory=$true, Position=0)]
     [string]$Ip,
     [Parameter(Mandatory=$true, Position=1)]
-    [string]$CameraId
+    [ValidateRange(1, 99)]
+    [int]$CameraId
 )
 
 $ErrorActionPreference = "Stop"

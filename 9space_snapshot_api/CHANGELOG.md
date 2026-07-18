@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.1 - 2026-07-18
+
+### Changed
+
+- Updated default `nvr_host` to `192.168.0.100` and mapped the addon port to
+  `8122` on the host.
+- Lowered default `max_concurrency` from `4` to `2`.
+
+### Fixed
+
+- PowerShell test script (`test/test_api.ps1`) now validates `CameraId` as an
+  integer in the range `1`–`99` to prevent invalid channel values.
+
 ## 0.2.0 - 2026-07-01
 
 ### Added
